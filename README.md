@@ -1,4 +1,5 @@
-# 🚀 Manus - Pure Integer Quantized Transformer
+# 🚀 aofaft-antiOverflowAntifloatTransformer-
+Pure Integer Quantized Transformer
 
 **A 100% integer-only transformer implementation with adaptive overflow zone mapping. NO floats, NO math.h, NO FPU required.**
 
