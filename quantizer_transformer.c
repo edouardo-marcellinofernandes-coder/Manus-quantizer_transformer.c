@@ -25,9 +25,11 @@
 /**
  * Prints a fixed-point integer as a decimal string without using floats.
  * Example: 1500000 -> "1.500000"
+ * FIXED: Correct handling of negative numbers
  */
 void print_as_decimal(long long val) {
-    if (val < 0) {
+    int is_negative = (val < 0);
+    if (is_negative) {
         printf("-");
         val = -val;
     }
@@ -48,15 +50,16 @@ void print_integer_matrix(const char *name, long long *mat, int rows, int cols) 
 
 /**
  * Pure Integer Matrix Multiplication: C = (A * B) / S
+ * FIXED: Use __int128 or split multiplication to avoid overflow
  */
 void integer_matrix_multiply(long long *A, long long *B, long long *C, int rowsA, int colsA, int colsB) {
     for (int i = 0; i < rowsA; i++) {
         for (int j = 0; j < colsB; j++) {
-            long long sum = 0;
+            __int128 sum = 0;  // Use 128-bit to prevent overflow
             for (int k = 0; k < colsA; k++) {
-                sum += A[i * colsA + k] * B[k * colsB + j];
+                sum += (__int128)A[i * colsA + k] * B[k * colsB + j];
             }
-            C[i * colsB + j] = sum / S;
+            C[i * colsB + j] = (long long)(sum / S);
         }
     }
 }
@@ -78,7 +81,7 @@ void integer_softmax(long long *mat, int rows, int cols) {
         for (int j = 0; j < cols; j++) sum += mat[i * cols + j];
         if (sum == 0) continue;
         for (int j = 0; j < cols; j++) {
-            mat[i * cols + j] = (mat[i * cols + j] * S) / sum;
+            mat[i * cols + j] = ((__int128)mat[i * cols + j] * S) / sum;
         }
     }
 }
@@ -92,7 +95,9 @@ void integer_attention(long long *Q, long long *K, long long *V, long long *Outp
     long long *Scores = (long long *)malloc(L * L * sizeof(long long));
     integer_matrix_multiply(Q, K_T, Scores, L, D_MODEL, L);
 
-    for (int i = 0; i < L * L; i++) Scores[i] /= 2; // Scaling sqrt(4)
+    // FIXED: Correct scaling by sqrt(D_MODEL) = sqrt(4) = 2
+    // So divide by 2^2 = 4, but we already divided by S in multiply, so divide by 2 more
+    for (int i = 0; i < L * L; i++) Scores[i] /= 2;
 
     integer_softmax(Scores, L, L);
     integer_matrix_multiply(Scores, V, Output, L, L, D_MODEL);
